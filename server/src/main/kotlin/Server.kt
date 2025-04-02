@@ -6,7 +6,7 @@ import java.net.ServerSocket
 class Server {
     var port: Int = 9876
 
-    var serverSocket: ServerSocket? = null
+    private var serverSocket: ServerSocket? = null
 
     fun start() {
         serverSocket = ServerSocket(port)

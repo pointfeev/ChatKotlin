@@ -5,28 +5,25 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.Socket
-import kotlin.system.exitProcess
 
-class Client(val socket: Socket) {
+class Client(private val socket: Socket) {
+    private var input: InputStream? = null
+    private var output: OutputStream? = null
+
     var state: ClientState = ClientState.INITIALIZING
 
-    var input: InputStream? = null
-    var output: OutputStream? = null
-
     companion object {
-        var lastClientId: Int = 0
+        var lastId: Int = 0
     }
 
-    var clientId: Int = ++lastClientId
+    val id: Int = ++lastId
 
     override fun toString(): String {
-        return "Client #%s".format(clientId)
+        return "Client #%s".format(id)
     }
 
-    val thread: Thread
-
     init {
-        thread = Thread {
+        Thread {
             if (!connect()) {
                 println("WARNING: %s failed to connect: %s".format(this, socket.inetAddress.hostAddress))
                 return@Thread
@@ -36,22 +33,24 @@ class Client(val socket: Socket) {
                 Thread.yield()
             }
             disconnect()
-        }
-        thread.start()
+        }.start()
     }
 
     fun connect(): Boolean {
+        if (state == ClientState.CONNECTING || state == ClientState.CONNECTED) {
+            return false
+        }
         state = ClientState.CONNECTING
 
         try {
             input = socket.getInputStream()
             output = socket.getOutputStream()
         } catch (e: Exception) {
+            println("ERROR: %s failed to connect: %s".format(this, socket.inetAddress.hostAddress))
             disconnect()
             return false
         }
 
-        // TODO: create synchronized Server.connect function and do this shit there (if that's even a thing in Kotlin)
         println("%s connected: %s".format(this, socket.inetAddress.hostAddress))
 
         state = ClientState.CONNECTED
@@ -62,6 +61,7 @@ class Client(val socket: Socket) {
         if (state == ClientState.DISCONNECTING || state == ClientState.DISCONNECTED) {
             return
         }
+        val wasConnected: Boolean = state == ClientState.CONNECTED
         state = ClientState.DISCONNECTING
 
         if (input != null) {
@@ -87,8 +87,9 @@ class Client(val socket: Socket) {
             // ignore
         }
 
-        // TODO: create synchronized Server.disconnect function and do this shit there (if that's even a thing in Kotlin)
-        println("%s disconnected: %s".format(this, socket.inetAddress.hostAddress))
+        if (wasConnected) {
+            println("%s disconnected: %s".format(this, socket.inetAddress.hostAddress))
+        }
 
         state = ClientState.DISCONNECTED
     }
@@ -100,7 +101,6 @@ class Client(val socket: Socket) {
                 return false
             }
 
-            // TODO: create synchronized Server.receive function and do this shit there (if that's even a thing in Kotlin)
             println("Received message from %s: %s".format(this, nextByte.toString()))
 
             return true
@@ -114,10 +114,12 @@ class Client(val socket: Socket) {
         try {
             output!!.write(bytes)
         } catch (e: IOException) {
-            if (state !== ClientState.DISCONNECTING) {
-                println("ERROR: Failed to send message to %s: %s".format(this, bytes.contentToString()))
-                exitProcess(-1)
+            if (state != ClientState.CONNECTED) {
+                return
             }
+
+            println("ERROR: Failed to send message to %s: %s".format(this, bytes.contentToString()))
+            disconnect()
         }
     }
 }

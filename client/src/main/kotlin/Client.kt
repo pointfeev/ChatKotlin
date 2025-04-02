@@ -13,9 +13,9 @@ class Client {
 
     var state: ClientState = ClientState.INITIALIZING
 
-    var socket: Socket? = null
-    var input: InputStream? = null
-    var output: OutputStream? = null
+    private var socket: Socket? = null
+    private var input: InputStream? = null
+    private var output: OutputStream? = null
 
     fun start() {
         println("Connecting to server at %s:%d...".format(host, port))
@@ -26,7 +26,7 @@ class Client {
 
         println("Connected to server")
         while (receive()) {
-            Thread.yield()
+            Thread.sleep(200)
         }
         disconnect()
     }

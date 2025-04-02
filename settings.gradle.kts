@@ -11,4 +11,4 @@ plugins {
 
 include(":shared", ":server", ":client")
 
-rootProject.name = "TicTacToeKotlin"
+rootProject.name = "ChatKotlin"
