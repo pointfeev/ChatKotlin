@@ -3,4 +3,4 @@ A terminal-based Tic-Tac-Toe game with a server and clients communicating via TC
 
 To install and run on **Windows**, use `.\RunServer.bat` and `.\RunClient.bat`.
 
-To install and run on **Linux**, use `.\RunServer` and `.\RunClient`.
+To install and run on **Linux**, use `.\RunServer.sh` and `.\RunClient.sh`.
