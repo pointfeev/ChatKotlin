@@ -15,7 +15,6 @@ fun main(args: Array<String>) {
             exitProcess(-1)
         }
     }
-    client.start()
-
     Runtime.getRuntime().addShutdownHook(Thread { client.disconnect() })
+    client.start()
 }
