@@ -3,10 +3,13 @@ package pointfeev.server
 import java.io.IOException
 import java.net.ServerSocket
 
-class Server {
+object Server {
     var port: Int = 9876
 
     private var serverSocket: ServerSocket? = null
+
+    val syncLock: Any = Any()
+    val clients: MutableSet<Client> = mutableSetOf()
 
     fun start() {
         serverSocket = ServerSocket(port)
@@ -18,20 +21,19 @@ class Server {
                 // ignore
             }
         }
+        shutdown()
     }
 
     fun shutdown() {
         if (serverSocket == null) {
             return
         }
-
         try {
             serverSocket!!.close()
         } catch (e: IOException) {
             // ignore
         }
         serverSocket = null
-
         println("Server stopped")
     }
 }
