@@ -4,10 +4,15 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.Socket
+import java.nio.charset.Charset
 
 abstract class AbstractClient(var socket: Socket? = null) {
     private var input: InputStream? = null
     private var output: OutputStream? = null
+
+    companion object {
+        val charset: Charset = Charsets.UTF_8
+    }
 
     var state: ClientState = ClientState.INITIALIZING
 
@@ -87,7 +92,7 @@ abstract class AbstractClient(var socket: Socket? = null) {
 
     fun receive(): Boolean {
         try {
-            val stringBuilder = StringBuilder()
+            val bytes: MutableList<Byte> = mutableListOf()
             while (true) {
                 val nextByte: Int = input!!.read()
                 if (nextByte == -1) {
@@ -96,29 +101,37 @@ abstract class AbstractClient(var socket: Socket? = null) {
                 if (nextByte == 0) {
                     break
                 }
-                stringBuilder.append(Char(nextByte))
+                bytes.add(nextByte.toByte())
             }
-            return onReceive(stringBuilder.toString())
+            return onReceive(bytes.toByteArray())
         } catch (e: IOException) {
             // ignore
         }
         return false
     }
 
-    abstract fun onReceive(string: String): Boolean
+    abstract fun onReceive(bytes: ByteArray): Boolean
 
-    fun send(string: String) {
+    fun send(bytes: ByteArray) {
         if (state != ClientState.LISTENING) {
             return
         }
 
         try {
-            output!!.write(string.toByteArray() + 0)
+            output!!.write(bytes + 0)
         } catch (e: IOException) {
-            onSendFailure(string)
+            onSendFailure(bytes)
             disconnect()
         }
     }
 
-    abstract fun onSendFailure(string: String)
+    fun send(byte: Byte) {
+        send(byteArrayOf(byte))
+    }
+
+    fun send(string: String) {
+        send(string.toByteArray(charset))
+    }
+
+    abstract fun onSendFailure(bytes: ByteArray)
 }

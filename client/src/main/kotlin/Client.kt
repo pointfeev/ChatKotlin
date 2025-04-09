@@ -3,6 +3,7 @@ package pointfeev.client
 import pointfeev.shared.AbstractClient
 import java.io.IOException
 import java.net.Socket
+import java.util.*
 import kotlin.system.exitProcess
 
 object Client : AbstractClient() {
@@ -24,6 +25,12 @@ object Client : AbstractClient() {
         Thread {
             listen()
         }.start()
+
+        val scanner = Scanner(System.`in`)
+        while (socket != null) {
+            send(scanner.nextLine())
+        }
+        disconnect()
     }
 
     override fun onConnectFailure() {
@@ -40,13 +47,18 @@ object Client : AbstractClient() {
         println("Disconnected from server")
     }
 
-    override fun onReceive(string: String): Boolean {
-        println("Received message from server: %s".format(string))
+    override fun onReceive(bytes: ByteArray): Boolean {
+        if (bytes.size == 1 && bytes[0] == 1.toByte()) {
+            println("That alias is already in use")
+            return true
+        }
+
+        println(bytes.toString(charset))
         return true
     }
 
-    override fun onSendFailure(string: String) {
-        println("ERROR: Failed to send message to server: %s".format(string))
+    override fun onSendFailure(bytes: ByteArray) {
+        println("ERROR: Failed to send message to server: %s".format(bytes.contentToString()))
         exitProcess(-1)
     }
 }
