@@ -1,5 +1,5 @@
 # Chat Kotlin
-A terminal-based chat application with a server and clients communicating via TCP/IP sockets; developed for the purpose of learning and testing out Kotlin and Gradle (and for fun).
+A chat application with a server and clients communicating via TCP/IP sockets; developed for the purpose of learning and testing out Kotlin and Gradle (and for fun).
 
 To install and run on **Windows**, use `./RunServer.bat` and `./RunClient.bat`.
 
